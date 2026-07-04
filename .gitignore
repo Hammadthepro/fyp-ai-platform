@@ -1,8 +1,46 @@
-.venv/
-.env
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Environment Variables
+.env
+
+# IDE
 .vscode/
 .idea/
-uploads/
+
+# macOS
+.DS_Store
+
+# pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# coverage
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# SQLite
+*.db
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Build
+dist/
+build/
+
+# Misc
+*.egg-info/
