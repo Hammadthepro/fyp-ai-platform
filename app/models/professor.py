@@ -54,3 +54,15 @@ class Professor(BaseModel):
         back_populates="professor",
     )
 
+    skills: Mapped[list["ProfessorSkill"]] = relationship(
+        "ProfessorSkill",
+        back_populates="professor",
+        cascade="all, delete-orphan",
+    )
+
+    domains: Mapped[list["ProfessorDomain"]] = relationship(
+        "ProfessorDomain",
+        back_populates="professor",
+        cascade="all, delete-orphan",
+    )
+

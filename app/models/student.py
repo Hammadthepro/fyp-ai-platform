@@ -34,6 +34,18 @@ class Student(BaseModel):
         nullable=True,
     )
 
+    skills: Mapped[list["StudentSkill"]] = relationship(
+        "StudentSkill",
+        back_populates="student",
+        cascade="all, delete-orphan",
+    )
+
+    domains: Mapped[list["StudentDomain"]] = relationship(
+        "StudentDomain",
+        back_populates="student",
+        cascade="all, delete-orphan",
+    )
+
     github: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
