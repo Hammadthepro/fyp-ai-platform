@@ -60,3 +60,26 @@ class MasterService:
         await self.db.commit()
 
         return domain
+
+
+        # ---------- Technologies ----------
+
+    async def get_technologies(self):
+        return await self.repo.get_all_technologies()
+
+    async def search_technologies(self, query: str):
+        return await self.repo.search_technologies(query)
+
+    async def create_technology(self, name: str):
+        name = self.normalize_name(name)
+
+        technology = await self.repo.get_technology_by_name(name)
+
+        if technology:
+            return technology
+
+        technology = await self.repo.create_technology(name)
+
+        await self.db.commit()
+
+        return technology

@@ -33,3 +33,19 @@ class DomainResponse(BaseModel):
     model_config = {
         "from_attributes": True,
     }
+
+
+class TechnologyCreate(BaseModel):
+    name: str = Field(
+        min_length=2,
+        max_length=100,
+    )
+
+
+class TechnologyResponse(BaseModel):
+    id: UUID
+    name: str
+
+    model_config = {
+        "from_attributes": True,
+    }

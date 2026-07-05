@@ -7,6 +7,8 @@ from app.master.schemas import (
     DomainResponse,
     SkillCreate,
     SkillResponse,
+    TechnologyCreate,
+    TechnologyResponse,
 )
 from app.master.service import MasterService
 
@@ -88,3 +90,40 @@ async def search_domains(
 ):
     service = MasterService(db)
     return await service.search_domains(q)
+
+
+# ---------- Technologies ----------
+
+@router.get(
+    "/technologies",
+    response_model=list[TechnologyResponse],
+)
+async def get_technologies(
+    db: AsyncSession = Depends(get_db),
+):
+    service = MasterService(db)
+    return await service.get_technologies()
+
+
+@router.post(
+    "/technologies",
+    response_model=TechnologyResponse,
+)
+async def create_technology(
+    data: TechnologyCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    service = MasterService(db)
+    return await service.create_technology(data.name)
+
+
+@router.get(
+    "/technologies/search",
+    response_model=list[TechnologyResponse],
+)
+async def search_technologies(
+    q: str = Query(..., min_length=1),
+    db: AsyncSession = Depends(get_db),
+):
+    service = MasterService(db)
+    return await service.search_technologies(q)

@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.master.router import router as master_router
 from app.auth.router import router as auth_router
 from app.profile.router import router as profile_router
+from app.ideas.router import router as ideas_router
+from app.ai.router import router as ai_router
 
 app = FastAPI(
     title="AI FYP Platform API",
@@ -20,7 +22,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(master_router)
-
+app.include_router(ideas_router)
+app.include_router(ai_router)
 
 @app.get("/")
 async def root():

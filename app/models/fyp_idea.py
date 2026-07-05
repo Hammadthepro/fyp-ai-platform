@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,6 +10,12 @@ class FYPIdea(BaseModel):
 
     professor_id: Mapped[UUID] = mapped_column(
         ForeignKey("professors.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    domain_id: Mapped[UUID] = mapped_column(
+        ForeignKey("domains.id"),
+        nullable=False,
     )
 
     title: Mapped[str] = mapped_column(
@@ -22,17 +28,13 @@ class FYPIdea(BaseModel):
         nullable=False,
     )
 
-    technologies: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-    )
-
-    department: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
+    difficulty: Mapped[str] = mapped_column(
+        String(30),
+        default="Intermediate",
     )
 
     max_students: Mapped[int] = mapped_column(
+        Integer,
         default=3,
     )
 
@@ -44,4 +46,20 @@ class FYPIdea(BaseModel):
     professor = relationship(
         "Professor",
         back_populates="ideas",
+    )
+
+    domain = relationship("Domain")
+
+    technologies = relationship(
+        "IdeaTechnology",
+        backref="idea",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    skills = relationship(
+        "IdeaSkill",
+        backref="idea",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
