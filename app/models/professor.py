@@ -66,3 +66,9 @@ class Professor(BaseModel):
         cascade="all, delete-orphan",
     )
 
+    ideas = relationship(
+        "FYPIdea",
+        back_populates="professor",
+        cascade="all, delete-orphan",
+    )
+
