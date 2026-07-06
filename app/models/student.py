@@ -65,3 +65,13 @@ class Student(BaseModel):
         "User",
         back_populates="student",
     )
+
+    groups = relationship(
+        "GroupMember",
+        back_populates="student",
+    )
+
+    led_groups = relationship(
+        "Group",
+        foreign_keys="Group.leader_id",
+    )

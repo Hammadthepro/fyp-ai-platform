@@ -11,6 +11,9 @@ from .student_skill import StudentSkill
 from .student_domain import StudentDomain
 from .professor_skill import ProfessorSkill
 from .professor_domain import ProfessorDomain
+from app.models.group import Group
+from app.models.group_member import GroupMember
+from app.models.group_invitation import GroupInvitation
 
 __all__ = [
     "User",

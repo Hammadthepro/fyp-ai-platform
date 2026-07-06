@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -127,7 +128,7 @@ class IdeaResponse(BaseModel):
 
     is_active: bool
 
-    created_at: str
+    created_at: datetime
 
     domain: DomainSimple
 

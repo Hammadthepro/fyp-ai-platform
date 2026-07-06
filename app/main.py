@@ -5,6 +5,7 @@ from app.auth.router import router as auth_router
 from app.profile.router import router as profile_router
 from app.ideas.router import router as ideas_router
 from app.ai.router import router as ai_router
+from app.groups.router import router as groups_router
 
 app = FastAPI(
     title="AI FYP Platform API",
@@ -24,6 +25,7 @@ app.include_router(profile_router)
 app.include_router(master_router)
 app.include_router(ideas_router)
 app.include_router(ai_router)
+app.include_router(groups_router)
 
 @app.get("/")
 async def root():
