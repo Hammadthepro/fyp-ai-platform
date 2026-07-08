@@ -14,6 +14,9 @@ from .professor_domain import ProfessorDomain
 from app.models.group import Group
 from app.models.group_member import GroupMember
 from app.models.group_invitation import GroupInvitation
+from app.models.proposal import Proposal
+from app.models.milestone import Milestone
+from app.models.submission import Submission
 
 __all__ = [
     "User",

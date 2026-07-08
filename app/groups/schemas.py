@@ -40,8 +40,13 @@ class GroupResponse(BaseModel):
         "from_attributes": True,
     }
 
+
 class GroupInviteRequest(BaseModel):
     student_id: UUID
+
+
+class InvitationAction(BaseModel):
+    action: str
 
 
 class InvitationResponse(BaseModel):

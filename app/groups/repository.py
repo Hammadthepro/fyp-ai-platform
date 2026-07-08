@@ -8,6 +8,7 @@ from app.models.group import Group
 from app.models.group_invitation import GroupInvitation
 from app.models.group_member import GroupMember
 from app.models.student import Student
+from app.models.professor import Professor
 
 
 class GroupRepository:
@@ -22,6 +23,18 @@ class GroupRepository:
         result = await self.db.execute(
             select(Student).where(
                 Student.user_id == user_id
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_professor(
+        self,
+        user_id: UUID,
+    ):
+        result = await self.db.execute(
+            select(Professor).where(
+                Professor.user_id == user_id
             )
         )
 
@@ -50,6 +63,8 @@ class GroupRepository:
         )
 
         return result.scalar_one_or_none()
+
+
 
     async def create_group(
         self,
@@ -141,6 +156,12 @@ class GroupRepository:
 
         return invitation
 
+    async def delete_invitation(
+        self,
+        invitation: GroupInvitation,
+    ):
+        await self.db.delete(invitation)
+
     async def count_members(
         self,
         group_id: UUID,
@@ -154,3 +175,29 @@ class GroupRepository:
         )
 
         return result.scalar_one()
+
+    async def get_group_membership(
+        self,
+        student_id: UUID,
+    ):
+        result = await self.db.execute(
+            select(GroupMember).where(
+                GroupMember.student_id == student_id
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def is_group_leader(
+        self,
+        group_id: UUID,
+        student_id: UUID,
+    ):
+        result = await self.db.execute(
+            select(Group).where(
+                Group.id == group_id,
+                Group.leader_id == student_id,
+            )
+        )
+
+        return result.scalar_one_or_none()

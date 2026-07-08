@@ -16,7 +16,6 @@ class GroupService:
         current_user,
         data,
     ):
-
         student = await self.repo.get_student(
             current_user.id
         )
@@ -59,10 +58,61 @@ class GroupService:
         self,
         current_user,
         group_id,
-        data,
+        student_id,
     ):
+        leader = await self.repo.get_student(
+            current_user.id
+        )
 
-        # Logged-in student
+        if not leader:
+            raise HTTPException(
+                403,
+                "Only students can invite.",
+            )
+
+        group = await self.repo.get_group(group_id)
+
+        if group.leader_id != leader.id:
+            raise HTTPException(
+                403,
+                "Only group leader can invite.",
+            )
+
+        if await self.repo.get_group_membership(student_id):
+            raise HTTPException(
+                400,
+                "Student already belongs to a group.",
+            )
+
+        if await self.repo.get_pending_invitation(
+            group_id,
+            student_id,
+        ):
+            raise HTTPException(
+                400,
+                "Invitation already exists.",
+            )
+
+        invitation = GroupInvitation(
+            group_id=group_id,
+            student_id=student_id,
+            status="Pending",
+        )
+
+        await self.repo.create_invitation(
+            invitation
+        )
+
+        await self.db.commit()
+
+        return invitation
+
+    async def respond_to_invitation(
+        self,
+        current_user,
+        invitation_id,
+        action,
+    ):
         student = await self.repo.get_student(
             current_user.id
         )
@@ -70,79 +120,71 @@ class GroupService:
         if not student:
             raise HTTPException(
                 403,
-                "Only students can invite members.",
+                "Only students can respond.",
             )
 
-        # Group
-        group = await self.repo.get_group(
-            group_id
+        invitation = await self.repo.get_invitation(
+            invitation_id
         )
 
-        if not group:
+        if not invitation:
             raise HTTPException(
                 404,
-                "Group not found.",
+                "Invitation not found.",
             )
 
-        # Only leader can invite
-        if group.leader_id != student.id:
+        if invitation.student_id != student.id:
             raise HTTPException(
                 403,
-                "Only the group leader can invite students.",
+                "This invitation is not yours.",
             )
 
-        # Student being invited
-        invited_student = await self.repo.get_student_by_id(
-            data.student_id
-        )
-
-        if not invited_student:
-            raise HTTPException(
-                404,
-                "Student not found.",
-            )
-
-        # Already in a group?
-        existing_group = await self.repo.get_group_by_student(
-            invited_student.id
-        )
-
-        if existing_group:
+        if invitation.status != "Pending":
             raise HTTPException(
                 400,
-                "Student already belongs to a group.",
+                "Invitation already processed.",
             )
 
-        # Invitation already exists?
-        invitation = await self.repo.get_pending_invitation(
-            group.id,
-            invited_student.id,
-        )
+        action = action.lower()
 
-        if invitation:
+        if action == "accept":
+
+            members = await self.repo.count_members(
+                invitation.group_id
+            )
+
+            if members >= 4:
+                raise HTTPException(
+                    400,
+                    "Group is already full.",
+                )
+
+            if await self.repo.get_group_membership(
+                student.id
+            ):
+                raise HTTPException(
+                    400,
+                    "Student already belongs to a group.",
+                )
+
+            await self.repo.add_member(
+                invitation.group_id,
+                student.id,
+            )
+
+            invitation.status = "Accepted"
+
+        elif action == "reject":
+
+            invitation.status = "Rejected"
+
+        else:
             raise HTTPException(
                 400,
-                "Invitation already sent.",
+                "Action must be accept or reject.",
             )
 
-        # Group full?
-        member_count = await self.repo.count_members(
-            group.id
-        )
-
-        if member_count >= 5:
-            raise HTTPException(
-                400,
-                "Group is full.",
-            )
-
-        invitation = GroupInvitation(
-            group_id=group.id,
-            student_id=invited_student.id,
-            status="Pending",
-        )
-
-        invitation = await self.repo.create_invitation(
+        await self.repo.update_invitation(
             invitation
         )
 

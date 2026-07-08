@@ -72,3 +72,8 @@ class Professor(BaseModel):
         cascade="all, delete-orphan",
     )
 
+    proposals = relationship(
+        "Proposal",
+        back_populates="professor",
+    )
+
