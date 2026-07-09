@@ -17,6 +17,7 @@ from app.models.group_invitation import GroupInvitation
 from app.models.proposal import Proposal
 from app.models.milestone import Milestone
 from app.models.submission import Submission
+from app.models.notification import Notification
 
 __all__ = [
     "User",
