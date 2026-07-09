@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from app.groups.repository import GroupRepository
 from app.models.group import Group
 from app.models.group_invitation import GroupInvitation
+from app.notifications.service import NotificationService
 
 
 class GroupService:
@@ -10,6 +11,7 @@ class GroupService:
     def __init__(self, db):
         self.db = db
         self.repo = GroupRepository(db)
+        self.notification = NotificationService(db)
 
     async def create_group(
         self,
@@ -105,6 +107,27 @@ class GroupService:
 
         await self.db.commit()
 
+        # Notify leader
+        await self.notification.create(
+            user_id=current_user.id,
+            title="Invitation Sent",
+            message=f"You invited a student to join '{group.name}'.",
+            type="Group",
+        )
+
+        # Notify invited student
+        invited_student = await self.repo.get_student_by_id(
+            student_id
+        )
+
+        if invited_student:
+            await self.notification.create(
+                user_id=invited_student.user_id,
+                title="Group Invitation",
+                message=f"You have been invited to join '{group.name}'.",
+                type="Group",
+            )
+
         return invitation
 
     async def respond_to_invitation(
@@ -147,6 +170,10 @@ class GroupService:
 
         action = action.lower()
 
+        leader = await self.repo.get_student_by_id(
+            invitation.group.leader_id
+        )
+
         if action == "accept":
 
             members = await self.repo.count_members(
@@ -174,20 +201,60 @@ class GroupService:
 
             invitation.status = "Accepted"
 
+            await self.repo.update_invitation(
+                invitation
+            )
+
+            await self.db.commit()
+
+            # Notify student
+            await self.notification.create(
+                user_id=current_user.id,
+                title="Invitation Accepted",
+                message=f"You joined '{invitation.group.name}'.",
+                type="Group",
+            )
+
+            # Notify leader
+            if leader:
+                await self.notification.create(
+                    user_id=leader.user_id,
+                    title="New Group Member",
+                    message=f"{student.user.full_name} joined your group.",
+                    type="Group",
+                )
+
         elif action == "reject":
 
             invitation.status = "Rejected"
+
+            await self.repo.update_invitation(
+                invitation
+            )
+
+            await self.db.commit()
+
+            # Notify student
+            await self.notification.create(
+                user_id=current_user.id,
+                title="Invitation Rejected",
+                message=f"You rejected the invitation to '{invitation.group.name}'.",
+                type="Group",
+            )
+
+            # Notify leader
+            if leader:
+                await self.notification.create(
+                    user_id=leader.user_id,
+                    title="Invitation Declined",
+                    message=f"{student.user.full_name} declined your invitation.",
+                    type="Group",
+                )
 
         else:
             raise HTTPException(
                 400,
                 "Action must be accept or reject.",
             )
-
-        await self.repo.update_invitation(
-            invitation
-        )
-
-        await self.db.commit()
 
         return invitation

@@ -4,6 +4,7 @@ from fastapi import HTTPException
 
 from app.groups.repository import GroupRepository
 from app.models.proposal import Proposal
+from app.notifications.service import NotificationService
 from app.proposals.repository import ProposalRepository
 
 
@@ -13,6 +14,11 @@ class ProposalService:
         self.db = db
         self.repo = ProposalRepository(db)
         self.group_repo = GroupRepository(db)
+        self.notification = NotificationService(db)
+
+    # =====================================================
+    # CREATE
+    # =====================================================
 
     async def create_proposal(
         self,
@@ -73,11 +79,29 @@ class ProposalService:
             status="Pending",
         )
 
-        await self.repo.create_proposal(proposal)
+        await self.repo.create_proposal(
+            proposal
+        )
 
         await self.db.commit()
 
+        professor = await self.repo.get_professor_by_id(
+            data.professor_id
+        )
+
+        if professor:
+            await self.notification.create(
+                user_id=professor.user_id,
+                title="New Proposal Submitted",
+                message=f"A new proposal '{proposal.title}' requires your review.",
+                type="Proposal",
+            )
+
         return proposal
+
+    # =====================================================
+    # PENDING
+    # =====================================================
 
     async def get_pending_proposals(
         self,
@@ -96,6 +120,10 @@ class ProposalService:
         return await self.repo.get_pending_proposals(
             professor.id
         )
+
+    # =====================================================
+    # APPROVE
+    # =====================================================
 
     async def approve_proposal(
         self,
@@ -136,7 +164,20 @@ class ProposalService:
 
         await self.db.commit()
 
+        for member in proposal.group.members:
+
+            await self.notification.create(
+                user_id=member.student.user_id,
+                title="Proposal Approved",
+                message=f"Your proposal '{proposal.title}' has been approved.",
+                type="Proposal",
+            )
+
         return proposal
+
+    # =====================================================
+    # REJECT
+    # =====================================================
 
     async def reject_proposal(
         self,
@@ -178,5 +219,17 @@ class ProposalService:
         )
 
         await self.db.commit()
+
+        for member in proposal.group.members:
+
+            await self.notification.create(
+                user_id=member.student.user_id,
+                title="Proposal Rejected",
+                message=(
+                    f"Your proposal '{proposal.title}' was rejected."
+                    f"\n\nFeedback:\n{feedback or 'No feedback provided.'}"
+                ),
+                type="Proposal",
+            )
 
         return proposal

@@ -18,6 +18,7 @@ from app.models.proposal import Proposal
 from app.models.milestone import Milestone
 from app.models.submission import Submission
 from app.models.notification import Notification
+from app.models.calendar_event import CalendarEvent
 
 __all__ = [
     "User",

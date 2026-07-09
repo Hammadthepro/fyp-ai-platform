@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import HTTPException
 
 from app.models.submission import Submission
+from app.notifications.service import NotificationService
 from app.submissions.repository import SubmissionRepository
 
 
@@ -11,6 +12,11 @@ class SubmissionService:
     def __init__(self, db):
         self.db = db
         self.repo = SubmissionRepository(db)
+        self.notification = NotificationService(db)
+
+    # =====================================================
+    # SUBMIT
+    # =====================================================
 
     async def submit(
         self,
@@ -54,6 +60,7 @@ class SubmissionService:
             github_link=data.github_link,
             drive_link=data.drive_link,
             notes=data.notes,
+            status="Submitted",
         )
 
         await self.repo.create_submission(
@@ -63,7 +70,31 @@ class SubmissionService:
         await self.db.commit()
         await self.db.refresh(submission)
 
+        # --------------------------------------------
+        # Notify supervisor
+        # --------------------------------------------
+
+        if milestone.group.proposals:
+
+            proposal = milestone.group.proposals[0]
+
+            if proposal.professor:
+
+                await self.notification.create(
+                    user_id=proposal.professor.user_id,
+                    title="New Submission",
+                    message=(
+                        f"{student.user.full_name} submitted "
+                        f"'{milestone.title}'."
+                    ),
+                    type="Submission",
+                )
+
         return submission
+
+    # =====================================================
+    # LIST
+    # =====================================================
 
     async def get_submissions(
         self,
@@ -83,16 +114,22 @@ class SubmissionService:
             milestone_id
         )
 
+    # =====================================================
+    # REVIEW
+    # =====================================================
+
     async def update_submission(
         self,
         current_user,
         submission_id: UUID,
         data,
     ):
-        # Allow only professors/admins to review submissions
         role = str(current_user.role).lower()
 
-        if "professor" not in role and "admin" not in role:
+        if (
+            "professor" not in role
+            and "admin" not in role
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="Only professors can review submissions.",
@@ -122,5 +159,21 @@ class SubmissionService:
 
         await self.db.commit()
         await self.db.refresh(submission)
+
+        # --------------------------------------------
+        # Notify student
+        # --------------------------------------------
+
+        await self.notification.create(
+            user_id=submission.student.user_id,
+            title="Submission Reviewed",
+            message=(
+                f"Your submission for "
+                f"'{submission.milestone.title}' "
+                f"has been reviewed.\n"
+                f"Status: {submission.status}"
+            ),
+            type="Submission",
+        )
 
         return submission

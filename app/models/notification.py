@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from uuid import UUID
 
 from app.database.base_model import BaseModel
 
@@ -7,7 +8,7 @@ from app.database.base_model import BaseModel
 class Notification(BaseModel):
     __tablename__ = "notifications"
 
-    user_id: Mapped[str] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         ForeignKey(
             "users.id",
             ondelete="CASCADE",
