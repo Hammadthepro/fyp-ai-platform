@@ -77,3 +77,8 @@ class Professor(BaseModel):
         back_populates="professor",
     )
 
+    groups = relationship(
+        "Group",
+        back_populates="supervisor",
+    )
+

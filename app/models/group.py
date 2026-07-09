@@ -20,6 +20,18 @@ class Group(BaseModel):
         nullable=False,
     )
 
+    supervisor_id = mapped_column(
+        ForeignKey(
+            "professors.id"
+        ),
+        nullable=True,
+    )
+
+    supervisor = relationship(
+        "Professor",
+        back_populates="groups",
+    )
+
     leader = relationship(
         "Student",
         foreign_keys=[leader_id],
