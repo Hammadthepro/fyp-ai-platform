@@ -14,6 +14,7 @@ from app.notifications.router import (
     router as notification_router,
 )
 from app.calendar.router import router as calendar_router
+from app.chat.router import router as chat_router
 
 app = FastAPI(
     title="AI FYP Platform API",
@@ -40,6 +41,7 @@ app.include_router(submission_router)
 app.include_router(dashboard_router)
 app.include_router(notification_router)
 app.include_router(calendar_router)
+app.include_router(chat_router)
 
 @app.get("/")
 async def root():

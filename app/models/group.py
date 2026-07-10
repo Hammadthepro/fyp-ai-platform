@@ -61,3 +61,10 @@ class Group(BaseModel):
         back_populates="group",
         cascade="all, delete-orphan",
     )
+
+    chat_room = relationship(
+        "ChatRoom",
+        back_populates="group",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
